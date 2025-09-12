@@ -1,0 +1,69 @@
+"""名单路由"""
+from typing import List, Optional
+from fastapi import APIRouter, Depends, Query
+
+from src.application.dto import WordListDTO, CreateWordListRequest, UpdateWordListRequest
+from src.interfaces.controllers import WordListController
+from src.interfaces.dependencies import get_wordlist_controller
+
+
+wordlist_router = APIRouter(prefix="/wordlist", tags=["名单管理"])
+
+
+@wordlist_router.post("", response_model=WordListDTO, summary="创建名单")
+async def create_wordlist(
+    request: CreateWordListRequest,
+    controller: WordListController = Depends(get_wordlist_controller)
+) -> WordListDTO:
+    """创建新的名单"""
+    return await controller.create_wordlist(request)
+
+
+@wordlist_router.get("/{wordlist_id}", response_model=WordListDTO, summary="获取名单详情")
+async def get_wordlist(
+    wordlist_id: int,
+    controller: WordListController = Depends(get_wordlist_controller)
+) -> WordListDTO:
+    """根据ID获取名单详情"""
+    return await controller.get_wordlist(wordlist_id)
+
+
+@wordlist_router.get("", response_model=List[WordListDTO], summary="获取名单列表")
+async def get_wordlists(
+    list_type: Optional[int] = Query(None, description="名单类型"),
+    match_rule: Optional[int] = Query(None, description="匹配规则"),
+    status: Optional[int] = Query(None, description="状态"),
+    include_deleted: bool = Query(False, description="是否包含已删除"),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    controller: WordListController = Depends(get_wordlist_controller)
+) -> List[WordListDTO]:
+    """获取名单列表"""
+    return await controller.get_wordlists(
+        list_type=list_type,
+        match_rule=match_rule,
+        status=status,
+        include_deleted=include_deleted,
+        page=page,
+        page_size=page_size
+    )
+
+
+@wordlist_router.put("/{wordlist_id}", response_model=WordListDTO, summary="更新名单")
+async def update_wordlist(
+    wordlist_id: int,
+    request: UpdateWordListRequest,
+    controller: WordListController = Depends(get_wordlist_controller)
+) -> WordListDTO:
+    """更新名单信息"""
+    return await controller.update_wordlist(wordlist_id, request)
+
+
+@wordlist_router.delete("/{wordlist_id}", summary="删除名单")
+async def delete_wordlist(
+    wordlist_id: int,
+    controller: WordListController = Depends(get_wordlist_controller),
+    deleted_by: Optional[str] = Query(None, description="删除人")
+) -> dict:
+    """删除名单（软删除）"""
+    return await controller.delete_wordlist(wordlist_id, deleted_by)

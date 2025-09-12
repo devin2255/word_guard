@@ -1,0 +1,1 @@
+from .wordlist_repository import WordListRepository
