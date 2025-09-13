@@ -1,9 +1,15 @@
 """名单路由"""
-from typing import List, Optional
+from __future__ import annotations
+from typing import List, Optional, TYPE_CHECKING
 from fastapi import APIRouter, Depends, Query
 
-from src.application.dto import WordListDTO, CreateWordListRequest, UpdateWordListRequest
-from src.interfaces.controllers import WordListController
+if TYPE_CHECKING:
+    from src.application.dto import WordListDTO, CreateWordListRequest, UpdateWordListRequest
+    from src.interfaces.controllers import WordListController
+else:
+    from src.application.dto import WordListDTO, CreateWordListRequest, UpdateWordListRequest
+    from src.interfaces.controllers import WordListController
+
 from src.interfaces.dependencies import get_wordlist_controller
 
 
@@ -15,7 +21,16 @@ async def create_wordlist(
     request: CreateWordListRequest,
     controller: WordListController = Depends(get_wordlist_controller)
 ) -> WordListDTO:
-    """创建新的名单"""
+    """
+    创建新的名单
+    
+    支持在创建时绑定应用：
+    - **app_ids**: 绑定指定应用ID列表（可选）
+    - **bind_all_apps**: 是否绑定到所有应用（可选）
+    - **default_priority**: 关联优先级，-100到100（默认0）
+    
+    如果同时指定了app_ids和bind_all_apps=true，则以bind_all_apps为准。
+    """
     return await controller.create_wordlist(request)
 
 

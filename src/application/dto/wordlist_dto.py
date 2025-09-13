@@ -1,6 +1,6 @@
 """名单相关DTO"""
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional, Union, List
 from pydantic import BaseModel, Field, field_validator
 
 from src.shared.enums.list_enums import (
@@ -44,6 +44,11 @@ class CreateWordListRequest(BaseModel):
     language: int = Field(default=0, description="语种")
     created_by: Optional[str] = Field(None, max_length=50, description="创建人")
     
+    # 应用绑定相关字段
+    app_ids: Optional[List[int]] = Field(None, description="绑定的应用ID列表")
+    bind_all_apps: bool = Field(False, description="是否绑定到所有应用")
+    default_priority: int = Field(0, ge=-100, le=100, description="关联优先级（-100到100）")
+    
     @field_validator('list_type', mode='before')
     @classmethod
     def validate_list_type(cls, v: int) -> int:
@@ -78,6 +83,26 @@ class CreateWordListRequest(BaseModel):
         if v not in LanguageEnum.values():
             raise ValueError(f'无效的语种: {v}')
         return v
+    
+    @field_validator('app_ids', mode='before')
+    @classmethod
+    def validate_app_ids(cls, v):
+        if v is not None:
+            if not isinstance(v, list):
+                raise ValueError('app_ids必须是列表类型')
+            if len(v) > 100:
+                raise ValueError('最多只能绑定100个应用')
+            if len(set(v)) != len(v):
+                raise ValueError('app_ids中不能有重复值')
+        return v
+    
+    def get_app_binding_config(self) -> dict:
+        """获取应用绑定配置"""
+        return {
+            "bind_all_apps": self.bind_all_apps,
+            "app_ids": self.app_ids or [],
+            "default_priority": self.default_priority
+        }
 
 
 class UpdateWordListRequest(BaseModel):

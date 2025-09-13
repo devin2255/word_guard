@@ -1,2 +1,4 @@
 from .wordlist_repository_impl import WordListRepositoryImpl
 from .app_repository_impl import AppRepositoryImpl
+from .list_detail_repository_impl import ListDetailRepositoryImpl
+from .association_repository_impl import AssociationRepositoryImpl

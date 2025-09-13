@@ -38,7 +38,7 @@ async def get_app_by_app_id(
     return await controller.get_app(app_id=app_id)
 
 
-@app_router.get("", response_model=List[AppDTO], summary="获取应用列表")
+@app_router.get("", response_model="List[AppDTO]", summary="获取应用列表")
 async def get_apps(
     include_deleted: bool = Query(False, description="是否包含已删除"),
     controller: AppController = Depends(get_app_controller)

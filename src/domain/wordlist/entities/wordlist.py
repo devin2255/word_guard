@@ -1,6 +1,6 @@
 """名单聚合根实体"""
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Set
 from dataclasses import dataclass, field
 
 from src.shared.enums.list_enums import (
@@ -11,13 +11,14 @@ from src.shared.enums.list_enums import (
     LanguageEnum,
     RiskTypeEnum
 )
-from src.shared.exceptions import WordListValidationError
+from src.shared.exceptions.domain_exceptions import WordListValidationError
+from src.shared.patterns import AggregateRoot
 from src.domain.wordlist.value_objects import ListName, RiskLevel
 from src.domain.wordlist.events import WordListCreatedEvent, WordListUpdatedEvent
 
 
 @dataclass
-class WordList:
+class WordList(AggregateRoot):
     """名单聚合根"""
     
     # 基本信息
@@ -38,11 +39,12 @@ class WordList:
     update_by: Optional[str] = None
     delete_by: Optional[str] = None
     
-    # 领域事件
-    _domain_events: List = field(default_factory=list, init=False)
+    # 关联的应用ID集合（不持久化到数据库，用于内存中的关系管理）
+    _associated_app_ids: Set[int] = field(default_factory=set, init=False)
     
     def __post_init__(self):
         """初始化后验证"""
+        super().__init__()  # 初始化聚合根
         if self.list_name is None:
             raise WordListValidationError("list_name", "", "名单名称不能为空")
     
@@ -77,7 +79,7 @@ class WordList:
         )
         
         # 添加领域事件
-        wordlist._add_domain_event(WordListCreatedEvent(wordlist))
+        wordlist.add_domain_event(WordListCreatedEvent(wordlist))
         
         return wordlist
     
@@ -89,7 +91,7 @@ class WordList:
         self.update_by = updated_by
         
         # 添加领域事件
-        self._add_domain_event(WordListUpdatedEvent(self, "name", old_name, new_name))
+        self.add_domain_event(WordListUpdatedEvent(self, "name", old_name, new_name))
     
     def update_status(self, status: SwitchEnum, updated_by: str = None) -> None:
         """更新状态"""
@@ -99,7 +101,7 @@ class WordList:
         self.update_by = updated_by
         
         # 添加领域事件
-        self._add_domain_event(WordListUpdatedEvent(self, "status", old_status.name, status.name))
+        self.add_domain_event(WordListUpdatedEvent(self, "status", old_status.name, status.name))
     
     def update_risk_level(self, risk_type: RiskTypeEnum, updated_by: str = None) -> None:
         """更新风险等级"""
@@ -109,7 +111,7 @@ class WordList:
         self.update_by = updated_by
         
         # 添加领域事件
-        self._add_domain_event(WordListUpdatedEvent(self, "risk_level", old_risk, self.risk_level.description))
+        self.add_domain_event(WordListUpdatedEvent(self, "risk_level", old_risk, self.risk_level.description))
     
     def soft_delete(self, deleted_by: str = None) -> None:
         """软删除"""
@@ -129,17 +131,29 @@ class WordList:
         """是否可以匹配指定类型"""
         return self.match_rule == match_type and self.is_active()
     
-    def _add_domain_event(self, event) -> None:
-        """添加领域事件"""
-        self._domain_events.append(event)
+    def add_associated_app(self, app_id: int) -> None:
+        """添加关联应用（内存操作）"""
+        self._associated_app_ids.add(app_id)
     
-    def get_domain_events(self) -> List:
-        """获取领域事件"""
-        return self._domain_events.copy()
+    def remove_associated_app(self, app_id: int) -> None:
+        """移除关联应用（内存操作）"""
+        self._associated_app_ids.discard(app_id)
     
-    def clear_domain_events(self) -> None:
-        """清除领域事件"""
-        self._domain_events.clear()
+    def is_associated_with_app(self, app_id: int) -> bool:
+        """是否与指定应用关联"""
+        return app_id in self._associated_app_ids
+    
+    def get_associated_app_ids(self) -> Set[int]:
+        """获取关联的应用ID集合"""
+        return self._associated_app_ids.copy()
+    
+    def has_any_associations(self) -> bool:
+        """是否有任何应用关联"""
+        return len(self._associated_app_ids) > 0
+    
+    def can_be_deleted(self) -> bool:
+        """是否可以删除（没有应用关联时才能删除）"""
+        return not self.has_any_associations() and not self.is_deleted()
     
     def to_dict(self) -> dict:
         """转换为字典"""

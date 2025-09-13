@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import settings, init_database
 from src.interfaces.routes import wordlist_router, app_router
+from src.interfaces.routes.list_detail_routes import router as list_detail_router
+from src.interfaces.routes.association_routes import router as association_router
+from src.interfaces.routes.moderation_routes import moderation_router
 
 
 def create_app() -> FastAPI:
@@ -31,6 +34,9 @@ def create_app() -> FastAPI:
     # 注册路由
     app.include_router(wordlist_router, prefix="/v1")
     app.include_router(app_router, prefix="/v1")
+    app.include_router(list_detail_router, prefix="/v1")
+    app.include_router(association_router, prefix="/v1")
+    app.include_router(moderation_router, prefix="/v1")
     
     # 初始化数据库
     init_database(app)

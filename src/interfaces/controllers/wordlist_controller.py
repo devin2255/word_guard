@@ -27,6 +27,9 @@ class WordListController:
         """创建名单"""
         
         try:
+            # 获取应用绑定配置
+            app_binding = request.get_app_binding_config()
+            
             command = CreateWordListCommand(
                 list_name=request.list_name,
                 list_type=request.list_type,
@@ -34,7 +37,10 @@ class WordListController:
                 suggestion=request.suggestion,
                 risk_type=request.risk_type,
                 language=request.language,
-                created_by=request.created_by
+                created_by=request.created_by,
+                app_ids=app_binding["app_ids"],
+                bind_all_apps=app_binding["bind_all_apps"],
+                default_priority=app_binding["default_priority"]
             )
             
             return await self._command_handler.handle_create(command)

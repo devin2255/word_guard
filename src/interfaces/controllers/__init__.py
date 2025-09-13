@@ -1,2 +1,3 @@
 from .wordlist_controller import WordListController
 from .app_controller import AppController
+from .moderation_controller import ModerationController

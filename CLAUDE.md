@@ -1,115 +1,160 @@
 # CLAUDE.md
 
-本文件为 Claude Code (claude.ai/code) 在此代码仓库中工作时提供指导。
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 项目概述
+## Project Overview
 
-御言(YuYan)是一个专为用户生成内容(UGC)设计的文本内容风控系统。它提供智能过滤、名单管理和多语言文本内容风险分类功能。
+御言(WordGuard) is a text content moderation system designed for User Generated Content (UGC). It provides intelligent filtering, blacklist/whitelist management, and multi-language text content risk classification using Domain-Driven Design (DDD) architecture.
 
-**技术栈:**
-- FastAPI (异步Web框架)
-- Tortoise ORM (异步ORM)  
-- MySQL (数据库)
-- Uvicorn (ASGI服务器)
+**Tech Stack:**
+- FastAPI (async web framework)
+- Tortoise ORM (async ORM)  
+- MySQL (database)
+- Uvicorn (ASGI server)
 - Python 3.7+
+- DDD Architecture Pattern
 
-## 开发命令
+## Development Commands
 
-### 运行应用
+### Running the Application
 ```bash
-# 开发模式
+# Development mode
 python yuyan.py
 
-# 生产模式  
-uvicorn yuyan:app --host 0.0.0.0 --port 18000
+# Production mode  
+uvicorn src.main:app --host 0.0.0.0 --port 18000
 ```
 
-### 数据库
-- 应用使用 Tortoise ORM，支持自动生成数据库表结构
-- 数据库连接通过 `app/config/` 中的环境变量配置
-- 模型支持软删除（通过 `delete_time` 字段实现逻辑删除）
+### Testing
+```bash
+# Run all tests
+pytest
 
-## 系统架构
+# Run tests with coverage
+pytest --cov=src
 
-### 项目结构
-```
-app/
-├── __init__.py          # 应用工厂，支持自动注册
-├── api/v1/             # API路由（版本化管理）
-├── config/             # 环境配置和常量  
-├── libs/enums.py       # 业务枚举定义
-├── models/             # 数据模型（继承BaseModel）
-└── validators/         # Pydantic请求验证
+# Run specific test file
+pytest tests/unit/test_wordlist_entity.py
 ```
 
-### 核心设计模式
+### Database Migrations
+```bash
+# Initialize migrations (first time only)
+aerich init-db
 
-**应用工厂模式**: `app/__init__.py` 中的 `create_app()` 自动完成:
-- 从 `app/models/` 目录动态加载模型
-- 注册 `app/api/v1/` 中的API路由
-- 配置数据库并自动生成表结构
-- 设置CORS跨域中间件
+# Generate new migration
+aerich migrate
 
-**BaseModel模式**: 所有模型继承自 `app/models/base.BaseModel`，提供:
-- 软删除功能（`delete_time` 字段）
-- 自动时间戳（`create_time`, `update_time`）
-- 审计字段（`create_by`, `update_by`, `delete_by`）
-- JSON序列化及字段过滤
-- 自动排除软删除记录的查询方法
-
-**API版本管理**: 所有路由以 `/v1/` 为前缀，按模块组织:
-- `/v1/app` - 应用管理
-- `/v1/wordlist` - 名单管理
-
-## 核心业务逻辑
-
-### 枚举类型 (app/libs/enums.py)
-定义系统行为的关键业务枚举:
-
-- **ListTypeEnum**: 白名单(0), 忽略名单(1), 黑名单(2)
-- **MatchRuleEnum**: 文本加昵称(0), 文本(1), 昵称(2), IP(3), 账号(4), 角色ID(5), 设备指纹(6)
-- **RiskTypeEnum**: 内容风险分类（正常、涉政、色情、辱骂、广告等）
-- **LanguageEnum**: 17+种支持语言（中文、英文、德文等）
-- **SwitchEnum**: 开(1)/关(0) 功能开关
-
-### 模型关系
-- **WordList**: 内容过滤规则的主要实体
-- **App**: 多租户支持的应用注册表
-- **ListDetail**: 名单的详细内容条目
-
-### 查询模式
-所有模型自动过滤软删除记录:
-```python
-# 以下方法自动排除已删除记录
-await Model.get(**kwargs)
-await Model.query_all(**kwargs)
-
-# 软删除
-await instance.delete(delete_by="username")
-
-# 硬删除  
-await instance.hard_delete()
+# Apply migrations
+aerich upgrade
 ```
 
-## 配置管理
+## Architecture Overview
 
-环境变量加载来源:
-- `app/config/product.env` (生产环境)
-- `app/config/test.env` (测试环境)
+### DDD Four-Layer Architecture
+```
+src/
+├── domain/                    # Domain Layer (core business logic)
+│   ├── wordlist/             # WordList aggregate
+│   │   ├── entities/         # Domain entities
+│   │   ├── value_objects/    # Value objects
+│   │   ├── repositories/     # Repository interfaces
+│   │   ├── services/         # Domain services
+│   │   └── events/           # Domain events
+│   └── app/                  # App aggregate
+├── application/              # Application Layer (use case coordination)
+│   ├── commands/             # Commands
+│   ├── queries/              # Queries
+│   ├── handlers/             # Command/Query handlers
+│   └── dto/                  # Data Transfer Objects
+├── infrastructure/           # Infrastructure Layer (technical implementation)
+│   ├── repositories/         # Repository implementations
+│   └── database/             # Database models (Tortoise ORM)
+├── interfaces/               # Interface Layer (external interaction)
+│   ├── controllers/          # Controllers
+│   ├── routes/               # FastAPI routes
+│   └── dependencies.py       # Dependency injection
+├── shared/                   # Shared Kernel
+│   ├── enums/                # Business enums
+│   ├── exceptions/           # Domain exceptions
+│   └── events/               # Event base classes
+└── config/                   # Configuration
+```
 
-`app/config/__init__.py` 中的关键设置:
-- `DATABASE_URL`: MySQL连接字符串
-- `APP_NAME`: 应用显示名称
-- `APP_ENV`: 环境标识符
+### Key Design Patterns
 
-## API文档
+**Application Factory**: `src/main.py` contains `create_app()` function that:
+- Initializes FastAPI application
+- Registers routes from `src/interfaces/routes/`
+- Sets up CORS middleware
+- Configures database connections
 
-运行应用时，FastAPI在 `/docs` 自动生成OpenAPI文档。API遵循RESTful约定，使用合适的HTTP状态码和Pydantic验证。
+**Domain-Driven Design**: 
+- **Entities**: WordList, App with business rules and invariants
+- **Value Objects**: ListName, RiskLevel for immutable concepts
+- **Aggregates**: WordList as aggregate root
+- **Repositories**: Abstract data access through interfaces
+- **Domain Events**: WordListCreated, WordListUpdated
 
-## 重要说明
+**CQRS Pattern**:
+- Commands: CreateWordListCommand, UpdateWordListCommand
+- Queries: GetWordListQuery, GetWordListsQuery  
+- Handlers: Separate command and query processing
 
-- 所有数据库操作使用 Tortoise ORM 异步方式
-- 模型使用驼峰命名转下划线的表名转换
-- 枚举字段同时支持整数值和字符串描述
-- 系统支持17+种语言的国际化内容审核
-- CORS配置为允许所有来源（生产环境需调整）
+## Core Business Logic
+
+### Enums (src/shared/enums/list_enums.py)
+Key business enums defining system behavior:
+
+- **ListType**: WHITELIST(0), IGNORELIST(1), BLACKLIST(2)
+- **MatchRule**: TEXT_AND_NICKNAME(0), TEXT(1), NICKNAME(2), IP(3), ACCOUNT(4), ROLE_ID(5), DEVICE_FINGERPRINT(6)
+- **RiskType**: Content risk classification (normal, political, pornographic, abusive, advertising, etc.)
+- **Language**: 17+ supported languages
+- **Status**: ENABLED(1), DISABLED(0)
+
+### Domain Models
+- **WordList**: Main entity for content filtering rules
+- **App**: Application registry for multi-tenant support
+
+### Soft Delete Pattern
+All entities support soft deletion:
+- Entities have `deleted_at` timestamps
+- Repository implementations automatically filter deleted records
+- Complete audit trail with created_by, updated_by, deleted_by fields
+
+## Configuration
+
+### Environment Configuration
+- Settings loaded from `src/config/settings.py`
+- Database configuration in `src/config/database.py`
+- Aerich configuration in `src/config/aerich_config.py`
+
+### Key Settings
+- `DATABASE_URL`: MySQL connection string
+- `APP_NAME`: Application display name
+- `APP_ENV`: Environment identifier
+- `DEBUG_MODE`: Development mode toggle
+
+## API Routes
+
+### WordList Management (/v1/wordlist)
+- `POST /v1/wordlist` - Create wordlist
+- `GET /v1/wordlist` - Get wordlist collection
+- `GET /v1/wordlist/{id}` - Get wordlist by ID
+- `PUT /v1/wordlist/{id}` - Update wordlist
+- `DELETE /v1/wordlist/{id}` - Soft delete wordlist
+
+### App Management (/v1/app)
+- `POST /v1/app` - Create application
+- `GET /v1/app` - Get application collection
+- `GET /v1/app/by-id/{id}` - Get app by database ID
+- `GET /v1/app/by-app-id/{app_id}` - Get app by application ID
+
+## Important Notes
+
+- All database operations use async/await with Tortoise ORM
+- Entity field names use snake_case in database, camelCase in API responses
+- Enum fields support both integer values and string descriptions
+- System supports 17+ languages for international content moderation
+- CORS configured to allow all origins (adjust for production)
+- FastAPI auto-generates OpenAPI docs at `/docs`

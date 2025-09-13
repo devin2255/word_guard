@@ -1,6 +1,6 @@
 """名单相关命令"""
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 
 @dataclass
@@ -14,6 +14,11 @@ class CreateWordListCommand:
     risk_type: int
     language: int = 0
     created_by: Optional[str] = None
+    
+    # 应用绑定相关字段
+    app_ids: Optional[List[int]] = None
+    bind_all_apps: bool = False
+    default_priority: int = 0
 
 
 @dataclass
