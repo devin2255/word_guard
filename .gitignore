@@ -124,6 +124,7 @@ dmypy.json
 *.swp
 *.swo
 *~
+.claude/
 
 # 操作系统相关文件
 .DS_Store
