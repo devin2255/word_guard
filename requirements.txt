@@ -1,5 +1,6 @@
 aerich==0.9.1
 aiomysql==0.2.0
+dependency-injector>=4.41.0
 aiosqlite==0.21.0
 annotated-types==0.7.0
 anyio==4.9.0

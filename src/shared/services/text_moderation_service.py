@@ -4,12 +4,12 @@ import logging
 from typing import List, Dict, Optional, Set, Tuple
 from datetime import datetime
 
-from src.domain.moderation.algorithms import AhoCorasickAutomaton
+from src.shared.algorithms import AhoCorasickAutomaton
 from src.domain.wordlist.repositories import WordListRepository
 from src.domain.listdetail.repositories import ListDetailRepository
 from src.domain.association.repositories import AssociationRepository
 from src.shared.enums.list_enums import ListTypeEnum, MatchRuleEnum, RiskTypeEnum, ListSuggestEnum
-from src.application.dto.moderation_dto import (
+from src.shared.value_objects import (
     MatchedWordInfo,
     ContentCheckResult,
     ModerationResultStatus

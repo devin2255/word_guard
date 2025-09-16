@@ -1,4 +1,4 @@
-"""DDD重构版应用启动器"""
+"""应用启动器"""
 from src.main import app
 
 if __name__ == '__main__':

@@ -15,21 +15,16 @@ from src.application.dto.association_dto import (
     PriorityOptimizationDTO
 )
 from src.shared.pagination import PageResponse
+from src.shared.containers import get_association_controller_dependency
 
 # 创建路由器
 router = APIRouter(prefix="/associations", tags=["associations"])
 
 
-async def get_association_controller() -> AssociationController:
-    """获取关联控制器"""
-    from src.shared.containers import get_association_controller
-    return get_association_controller()
-
-
 @router.post("/", summary="创建关联", response_model=AssociationDTO)
 async def create_association(
     request: CreateAssociationRequest,
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     创建应用-名单关联
@@ -46,7 +41,7 @@ async def create_association(
 @router.get("/{association_id}", summary="获取关联", response_model=AssociationDTO)
 async def get_association(
     association_id: int,
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     根据ID获取关联
@@ -60,7 +55,7 @@ async def get_association(
 async def get_association_by_app_wordlist(
     app_id: int,
     wordlist_id: int,
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     根据应用ID和名单ID获取关联
@@ -80,7 +75,7 @@ async def get_associations(
     page_size: int = Query(20, ge=1, le=100, description="每页大小"),
     sort_field: str = Query("priority", description="排序字段"),
     sort_direction: str = Query("desc", description="排序方向（asc/desc）"),
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     获取关联列表（支持过滤、分页、排序）
@@ -104,7 +99,7 @@ async def get_app_associations(
     active_only: bool = Query(False, description="仅显示激活的关联"),
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页大小"),
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     获取应用的所有关联
@@ -121,7 +116,7 @@ async def get_wordlist_associations(
     active_only: bool = Query(False, description="仅显示激活的关联"),
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页大小"),
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     获取名单的所有关联
@@ -138,7 +133,7 @@ async def get_associations_by_priority(
     wordlist_id: Optional[int] = Query(None, description="名单ID过滤"),
     min_priority: int = Query(0, description="最小优先级"),
     active_only: bool = Query(True, description="仅显示激活的关联"),
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     按优先级获取关联
@@ -159,7 +154,7 @@ async def get_associations_by_priority(
 async def update_association(
     association_id: int,
     request: UpdateAssociationRequest,
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     更新关联
@@ -177,7 +172,7 @@ async def update_association(
 async def delete_association(
     association_id: int,
     deleted_by: Optional[str] = Query(None, description="删除操作人"),
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     删除关联（软删除）
@@ -193,7 +188,7 @@ async def delete_association_by_app_wordlist(
     app_id: int,
     wordlist_id: int,
     deleted_by: Optional[str] = Query(None, description="删除操作人"),
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     根据应用ID和名单ID删除关联
@@ -209,7 +204,7 @@ async def delete_association_by_app_wordlist(
 async def activate_association(
     association_id: int,
     updated_by: Optional[str] = Query(None, description="更新操作人"),
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     激活关联
@@ -224,7 +219,7 @@ async def activate_association(
 async def deactivate_association(
     association_id: int,
     updated_by: Optional[str] = Query(None, description="更新操作人"),
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     停用关联
@@ -238,7 +233,7 @@ async def deactivate_association(
 @router.post("/batch", summary="批量创建关联", response_model=BatchOperationResultDTO)
 async def batch_create_associations(
     request: BatchCreateAssociationsRequest,
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     批量创建关联
@@ -257,7 +252,7 @@ async def batch_create_associations(
 @router.put("/batch", summary="批量更新关联", response_model=BatchOperationResultDTO)
 async def batch_update_associations(
     request: BatchUpdateAssociationsRequest,
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     批量更新关联
@@ -276,7 +271,7 @@ async def batch_update_associations(
 # 统计和分析接口
 @router.get("/statistics/overview", summary="获取关联统计", response_model=AssociationStatisticsDTO)
 async def get_association_statistics(
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     获取关联统计信息
@@ -290,7 +285,7 @@ async def get_association_statistics(
 async def get_priority_optimization_suggestions(
     app_id: Optional[int] = Query(None, description="应用ID过滤"),
     wordlist_id: Optional[int] = Query(None, description="名单ID过滤"),
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     获取优先级优化建议
@@ -307,7 +302,7 @@ async def get_priority_optimization_suggestions(
 @router.get("/validation/app/{app_id}/can-delete", summary="验证应用是否可删除")
 async def validate_app_deletion(
     app_id: int,
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     验证应用是否可以安全删除
@@ -322,7 +317,7 @@ async def validate_app_deletion(
 @router.get("/validation/wordlist/{wordlist_id}/can-delete", summary="验证名单是否可删除")
 async def validate_wordlist_deletion(
     wordlist_id: int,
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     验证名单是否可以安全删除
@@ -339,7 +334,7 @@ async def validate_wordlist_deletion(
 async def cleanup_app_associations(
     app_id: int,
     deleted_by: Optional[str] = Query(None, description="删除操作人"),
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     清理应用的所有关联（软删除）
@@ -356,7 +351,7 @@ async def cleanup_app_associations(
 async def cleanup_wordlist_associations(
     wordlist_id: int,
     deleted_by: Optional[str] = Query(None, description="删除操作人"),
-    controller: AssociationController = Depends(get_association_controller)
+    controller: AssociationController = Depends(get_association_controller_dependency)
 ):
     """
     清理名单的所有关联（软删除）

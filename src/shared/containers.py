@@ -26,7 +26,10 @@ from src.interfaces.controllers import WordListController, AppController
 from src.interfaces.controllers.list_detail_controller import ListDetailController
 from src.interfaces.controllers.association_controller import AssociationController
 from src.application.services.moderation_service import ModerationApplicationService
-from src.domain.moderation.services.text_moderation_service import TextModerationService
+from src.application.services.moderation_log_service import ModerationLogService
+from src.shared.services.text_moderation_service import TextModerationService
+from src.infrastructure.repositories.moderation_log_repository_impl import ModerationLogRepositoryImpl
+from src.interfaces.controllers.moderation_controller import ModerationController
 from src.shared.events.event_publisher import event_publisher, EventPublisher
 from src.shared.patterns import UnitOfWorkFactory
 from src.domain.wordlist.events.event_handlers import (
@@ -64,6 +67,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
     app_repository = providers.Singleton(AppRepositoryImpl)
     list_detail_repository = providers.Singleton(ListDetailRepositoryImpl)
     association_repository = providers.Singleton(AssociationRepositoryImpl)
+    moderation_log_repository = providers.Singleton(ModerationLogRepositoryImpl)
     
     # 领域服务
     list_detail_domain_service = providers.Factory(
@@ -91,6 +95,12 @@ class ApplicationContainer(containers.DeclarativeContainer):
         wordlist_repository=wordlist_repository,
         listdetail_repository=list_detail_repository,
         association_repository=association_repository
+    )
+
+    # 审核日志服务
+    moderation_log_service = providers.Factory(
+        ModerationLogService,
+        repository=moderation_log_repository
     )
     
     # 事件处理器
@@ -182,6 +192,13 @@ class ApplicationContainer(containers.DeclarativeContainer):
         AssociationController,
         command_handler=association_command_handler,
         query_handler=association_query_handler
+    )
+
+    # 文本风控控制器
+    moderation_controller = providers.Factory(
+        ModerationController,
+        moderation_service=moderation_service,
+        moderation_log_service=moderation_log_service
     )
 
 
@@ -288,6 +305,11 @@ def get_association_controller() -> AssociationController:
     return container.association_controller()
 
 
+def get_moderation_controller() -> ModerationController:
+    """获取文本风控控制器"""
+    return container.moderation_controller()
+
+
 # FastAPI 依赖注入函数
 async def get_wordlist_controller_dependency(
     controller: WordListController = Provide[ApplicationContainer.wordlist_controller]
@@ -314,4 +336,11 @@ async def get_association_controller_dependency(
     controller: AssociationController = Provide[ApplicationContainer.association_controller]
 ) -> AssociationController:
     """FastAPI 关联控制器依赖"""
+    return controller
+
+
+async def get_moderation_controller_dependency(
+    controller: ModerationController = Provide[ApplicationContainer.moderation_controller]
+) -> ModerationController:
+    """FastAPI 文本风控控制器依赖"""
     return controller

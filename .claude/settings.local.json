@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(pip install:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(aerich migrate:*)",
+      "Bash(aerich upgrade:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

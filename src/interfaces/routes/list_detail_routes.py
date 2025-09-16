@@ -17,21 +17,16 @@ from src.application.dto.list_detail_dto import (
     BatchProcessingResultDTO
 )
 from src.shared.pagination import PageResponse
+from src.shared.containers import get_list_detail_controller_dependency
 
 # 创建路由器
 router = APIRouter(prefix="/list-details", tags=["list-details"])
 
 
-async def get_list_detail_controller() -> ListDetailController:
-    """获取名单详情控制器"""
-    from src.shared.containers import get_list_detail_controller
-    return get_list_detail_controller()
-
-
 @router.post("/", summary="创建名单详情", response_model=ListDetailDTO)
 async def create_detail(
     request: CreateListDetailRequest,
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     创建新的名单详情
@@ -48,7 +43,7 @@ async def create_detail(
 @router.get("/{detail_id}", summary="获取名单详情", response_model=ListDetailDTO)
 async def get_detail(
     detail_id: int,
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     根据ID获取名单详情
@@ -68,7 +63,7 @@ async def get_details(
     page_size: int = Query(20, ge=1, le=100, description="每页大小"),
     sort_field: str = Query("create_time", description="排序字段"),
     sort_direction: str = Query("desc", description="排序方向（asc/desc）"),
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     获取名单详情列表（支持过滤、搜索、分页、排序）
@@ -95,7 +90,7 @@ async def search_details(
     is_active: Optional[bool] = Query(True, description="是否激活"),
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(20, ge=1, le=100, description="每页大小"),
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     全文搜索名单详情
@@ -111,7 +106,7 @@ async def search_details(
 async def update_detail(
     detail_id: int,
     request: UpdateListDetailRequest,
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     更新名单详情
@@ -129,7 +124,7 @@ async def update_detail(
 async def delete_detail(
     detail_id: int,
     deleted_by: Optional[str] = Query(None, description="删除人"),
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     软删除名单详情
@@ -144,7 +139,7 @@ async def delete_detail(
 async def activate_detail(
     detail_id: int,
     updated_by: Optional[str] = Query(None, description="更新人"),
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     激活名单详情
@@ -159,7 +154,7 @@ async def activate_detail(
 async def deactivate_detail(
     detail_id: int,
     updated_by: Optional[str] = Query(None, description="更新人"),
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     停用名单详情
@@ -173,7 +168,7 @@ async def deactivate_detail(
 @router.post("/batch", summary="批量创建名单详情", response_model=BatchProcessingResultDTO)
 async def batch_create_details(
     request: BatchCreateListDetailsRequest,
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     批量创建名单详情
@@ -189,7 +184,7 @@ async def batch_create_details(
 @router.put("/batch", summary="批量更新名单详情")
 async def batch_update_details(
     request: BatchUpdateListDetailsRequest,
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     批量更新名单详情
@@ -206,7 +201,7 @@ async def batch_update_details(
 @router.get("/statistics/{wordlist_id}", summary="获取统计信息", response_model=ListDetailStatisticsDTO)
 async def get_statistics(
     wordlist_id: int,
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     获取名单详情统计信息
@@ -221,7 +216,7 @@ async def get_statistics(
 @router.get("/analysis/quality/{wordlist_id}", summary="分析数据质量", response_model=QualityAnalysisDTO)
 async def analyze_quality(
     wordlist_id: int,
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     分析名单详情数据质量
@@ -236,7 +231,7 @@ async def analyze_quality(
 @router.get("/analysis/duplicates/{wordlist_id}", summary="分析重复内容", response_model=DuplicateAnalysisDTO)
 async def analyze_duplicates(
     wordlist_id: int,
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     分析名单详情中的重复内容
@@ -251,7 +246,7 @@ async def analyze_duplicates(
 @router.get("/optimization/suggestions/{wordlist_id}", summary="获取优化建议", response_model=OptimizationSuggestionsDTO)
 async def get_optimization_suggestions(
     wordlist_id: int,
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     获取名单详情优化建议
@@ -269,7 +264,7 @@ async def cleanup_duplicates(
     wordlist_id: int,
     keep_strategy: str = Query("earliest", description="保留策略（earliest/latest）"),
     deleted_by: Optional[str] = Query(None, description="删除人"),
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     清理重复内容
@@ -288,7 +283,7 @@ async def reprocess_texts(
     wordlist_id: int,
     processing_level: str = Query("standard", description="处理级别（basic/standard/advanced/strict）"),
     updated_by: Optional[str] = Query(None, description="更新人"),
-    controller: ListDetailController = Depends(get_list_detail_controller)
+    controller: ListDetailController = Depends(get_list_detail_controller_dependency)
 ):
     """
     重新处理名单详情文本

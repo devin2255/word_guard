@@ -5,7 +5,7 @@ from src.domain.wordlist.entities import WordList
 from src.domain.wordlist.repositories import WordListRepository
 from src.domain.wordlist.value_objects import ListName, RiskLevel
 from src.domain.association.services import AssociationDomainService
-from src.infrastructure.repositories import AppRepositoryImpl
+from src.domain.app.repositories import AppRepository
 from src.shared.enums.list_enums import ListTypeEnum, MatchRuleEnum, ListSuggestEnum, SwitchEnum, LanguageEnum, RiskTypeEnum
 from src.shared.exceptions import WordListNotFoundError, WordListValidationError
 from src.application.commands.wordlist_commands import CreateWordListCommand, UpdateWordListCommand, DeleteWordListCommand
@@ -20,7 +20,7 @@ class WordListCommandHandler:
         self, 
         wordlist_repository: WordListRepository,
         association_service: Optional[AssociationDomainService] = None,
-        app_repository: Optional[AppRepositoryImpl] = None
+        app_repository: Optional[AppRepository] = None
     ):
         self._wordlist_repository = wordlist_repository
         self._association_service = association_service

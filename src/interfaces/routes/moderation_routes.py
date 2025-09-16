@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 from src.application.dto.moderation_dto import ModerationRequest, ModerationResponse
 from src.interfaces.controllers.moderation_controller import ModerationController
-from src.interfaces.dependencies import get_moderation_controller
+from src.shared.containers import get_moderation_controller_dependency
 
 moderation_router = APIRouter(prefix="/moderation", tags=["文本风控"])
 
@@ -12,7 +12,7 @@ moderation_router = APIRouter(prefix="/moderation", tags=["文本风控"])
 @moderation_router.post("/check", response_model=ModerationResponse, summary="综合内容检查")
 async def check_content(
     request: ModerationRequest,
-    controller: ModerationController = Depends(get_moderation_controller)
+    controller: ModerationController = Depends(get_moderation_controller_dependency)
 ) -> ModerationResponse:
     """
     对用户昵称和发言内容进行综合风控检查
@@ -48,7 +48,7 @@ async def check_content(
 @moderation_router.post("/check/nickname", response_model=ModerationResponse, summary="昵称检查")
 async def check_nickname(
     request: ModerationRequest,
-    controller: ModerationController = Depends(get_moderation_controller)
+    controller: ModerationController = Depends(get_moderation_controller_dependency)
 ) -> ModerationResponse:
     """
     仅对用户昵称进行风控检查
@@ -75,7 +75,7 @@ async def check_nickname(
 @moderation_router.post("/check/content", response_model=ModerationResponse, summary="内容检查")
 async def check_content_only(
     request: ModerationRequest,
-    controller: ModerationController = Depends(get_moderation_controller)
+    controller: ModerationController = Depends(get_moderation_controller_dependency)
 ) -> ModerationResponse:
     """
     仅对发言内容进行风控检查
@@ -102,7 +102,7 @@ async def check_content_only(
 @moderation_router.post("/reload", response_model=dict, summary="重新加载敏感词")
 async def reload_patterns(
     app_id: Optional[int] = Query(None, description="应用ID，如果指定则只重新加载该应用的敏感词"),
-    controller: ModerationController = Depends(get_moderation_controller)
+    controller: ModerationController = Depends(get_moderation_controller_dependency)
 ) -> dict:
     """
     重新加载敏感词模式库
@@ -130,7 +130,7 @@ async def reload_patterns(
 
 @moderation_router.get("/statistics", response_model=dict, summary="获取服务统计")
 async def get_statistics(
-    controller: ModerationController = Depends(get_moderation_controller)
+    controller: ModerationController = Depends(get_moderation_controller_dependency)
 ) -> dict:
     """
     获取文本风控服务的统计信息
@@ -151,7 +151,7 @@ async def get_statistics(
 
 @moderation_router.get("/health", response_model=dict, summary="健康检查")
 async def health_check(
-    controller: ModerationController = Depends(get_moderation_controller)
+    controller: ModerationController = Depends(get_moderation_controller_dependency)
 ) -> dict:
     """
     检查文本风控服务的健康状态

@@ -7,6 +7,7 @@ from src.interfaces.routes import wordlist_router, app_router
 from src.interfaces.routes.list_detail_routes import router as list_detail_router
 from src.interfaces.routes.association_routes import router as association_router
 from src.interfaces.routes.moderation_routes import moderation_router
+from src.shared.containers import container
 
 
 def create_app() -> FastAPI:
@@ -14,7 +15,7 @@ def create_app() -> FastAPI:
     
     app = FastAPI(
         title=settings.app_name,
-        description="御言内容风控系统 - DDD架构重构版",
+        description="御言内容风控系统",
         version="2.0.0",
         docs_url="/docs",
         swagger_js_url="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js",
@@ -40,7 +41,20 @@ def create_app() -> FastAPI:
     
     # 初始化数据库
     init_database(app)
+
+    # 初始化依赖注入容器
+    container.wire(modules=[
+        "src.interfaces.routes.wordlist_routes",
+        "src.interfaces.routes.app_routes",
+        "src.interfaces.routes.list_detail_routes",
+        "src.interfaces.routes.association_routes",
+        "src.interfaces.routes.moderation_routes"
+    ])
     
+    # 初始化事件处理器 - 确保事件驱动架构正常工作
+    from src.shared.containers import setup_event_handlers
+    setup_event_handlers(container)
+
     # 根路径
     @app.get("/", summary="系统信息")
     async def root():

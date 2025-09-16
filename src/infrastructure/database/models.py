@@ -12,6 +12,8 @@ from src.shared.enums.list_enums import (
     LanguageEnum
 )
 
+# 删除循环导入
+
 
 class BaseModel(models.Model):
     """基础模型，提供软删除、创建时间、更新时间等功能"""
@@ -124,4 +126,85 @@ class AppWordListAssociationModel(BaseModel):
             ("wordlist_id", "is_active"),
             ("app_id", "wordlist_id", "is_active"),
             ("priority", "is_active")
+        ]
+
+
+class ModerationLogModel(models.Model):
+    """敏感词检查日志数据库模型"""
+    
+    # 主键
+    id = fields.BigIntField(pk=True, description="主键ID")
+    
+    # 请求信息
+    request_id = fields.CharField(max_length=100, index=True, description="请求ID")
+    request_time = fields.DatetimeField(default=datetime.now, index=True, description="请求时间")
+    
+    # 用户信息
+    user_id = fields.CharField(max_length=100, null=True, index=True, description="用户ID")
+    nickname = fields.CharField(max_length=100, null=True, description="用户昵称")
+    account = fields.CharField(max_length=100, null=True, index=True, description="用户账号")
+    role_id = fields.CharField(max_length=50, null=True, description="角色ID")
+    
+    # 内容信息
+    content = fields.TextField(null=True, description="发言内容")
+    content_type = fields.CharField(max_length=50, null=True, default="text", description="内容类型")
+    
+    # 网络信息
+    ip_address = fields.CharField(max_length=45, null=True, index=True, description="IP地址")
+    user_agent = fields.CharField(max_length=500, null=True, description="用户代理")
+    
+    # 业务信息
+    app_id = fields.IntField(null=True, index=True, description="应用ID")
+    scene = fields.CharField(max_length=50, null=True, default="default", description="业务场景")
+    language = fields.IntField(default=0, description="语言类型")
+    speak_time = fields.DatetimeField(null=True, description="发言时间")
+    
+    # 检测配置
+    check_nickname = fields.BooleanField(default=True, description="是否检查昵称")
+    check_content = fields.BooleanField(default=True, description="是否检查内容")
+    return_matched_words = fields.BooleanField(default=True, description="是否返回匹配词")
+    auto_replace = fields.BooleanField(default=False, description="是否自动替换")
+    case_sensitive = fields.BooleanField(default=False, description="是否大小写敏感")
+    
+    # 检测结果
+    check_time = fields.DatetimeField(default=datetime.now, index=True, description="检查时间")
+    is_violation = fields.BooleanField(default=False, index=True, description="是否违规")
+    max_risk_level = fields.IntField(default=0, index=True, description="最大风险等级")
+    status = fields.IntField(default=0, index=True, description="检测状态")
+    
+    # 昵称检查结果
+    nickname_violation = fields.BooleanField(default=False, description="昵称是否违规")
+    nickname_risk_level = fields.IntField(null=True, description="昵称风险等级")
+    nickname_matched_count = fields.IntField(default=0, description="昵称匹配词数量")
+    nickname_matched_words = fields.TextField(null=True, description="昵称匹配词信息(JSON)")
+    
+    # 内容检查结果
+    content_violation = fields.BooleanField(default=False, description="内容是否违规")
+    content_risk_level = fields.IntField(null=True, description="内容风险等级")
+    content_matched_count = fields.IntField(default=0, description="内容匹配词数量")
+    content_matched_words = fields.TextField(null=True, description="内容匹配词信息(JSON)")
+    
+    # 处理结果
+    suggestion = fields.TextField(null=True, description="处理建议")
+    error_message = fields.TextField(null=True, description="错误信息")
+    
+    # 性能统计
+    process_time_ms = fields.IntField(default=0, index=True, description="处理耗时(毫秒)")
+    
+    # 扩展字段
+    extra_data = fields.TextField(null=True, description="扩展数据(JSON)")
+    
+    # 审计字段
+    created_at = fields.DatetimeField(auto_now_add=True, index=True, description="创建时间")
+    
+    class Meta:
+        table = "moderation_logs"
+        table_description = "敏感词检查日志表"
+        indexes = [
+            # 复合索引
+            ("app_id", "request_time"),
+            ("user_id", "request_time"),
+            ("is_violation", "request_time"),
+            ("ip_address", "request_time"),
+            ("check_time", "process_time_ms"),
         ]

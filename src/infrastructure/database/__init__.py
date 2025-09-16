@@ -1,1 +1,1 @@
-from .models import WordListModel, AppModel
+from .models import WordListModel, AppModel, ModerationLogModel

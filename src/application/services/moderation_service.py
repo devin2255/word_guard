@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 from datetime import datetime
 
-from src.domain.moderation.services.text_moderation_service import TextModerationService
+from src.shared.services.text_moderation_service import TextModerationService
 from src.domain.wordlist.repositories import WordListRepository
 from src.domain.listdetail.repositories import ListDetailRepository
 from src.domain.association.repositories import AssociationRepository
